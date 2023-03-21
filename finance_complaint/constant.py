@@ -8,4 +8,4 @@ class EnvironmentVariable:
     mongo_db_url = os.getenv("MONGO_DB_URL")
 
 
-env_var = EnvironmentVariable()
+env_var = EnvironmentVariable()     
