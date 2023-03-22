@@ -1,6 +1,9 @@
 import yaml
 from .exception import FinanceException
 import os, sys
+from pyspark.ml.evaluation import MulticlassClassificationEvaluator
+from pyspark.sql import DataFrame
+from finance_complaint.logger import logging as logger
 
 def write_yaml_file(file_path: str, data: dict = None):
     """
@@ -26,3 +29,16 @@ def read_yaml_file(file_path: str) -> dict:
             return yaml.safe_load(yaml_file)
     except Exception as e:
         raise CustomException(e, sys) from e
+
+
+def get_score(dataframe: DataFrame, metric_name, label_col, prediction_col) -> float:
+    try:
+        evaluator = MulticlassClassificationEvaluator(
+            labelCol=label_col, predictionCol=prediction_col,
+            metricName=metric_name)
+        score = evaluator.evaluate(dataframe)
+        print(f"{metric_name} score: {score}")
+        logger.info(f"{metric_name} score: {score}")
+        return score
+    except Exception as e:
+        raise FinanceException(e, sys)
