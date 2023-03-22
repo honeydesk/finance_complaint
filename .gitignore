@@ -136,3 +136,4 @@ artifact
 .vscode
 artifact/
 logs/
+saved_models/
