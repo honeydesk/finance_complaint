@@ -1,9 +1,10 @@
 from finance_complaint.exception import FinanceException
 from finance_complaint.logger import logging as  logger
-from finance_complaint.entity.config_entity import (DataIngestionConfig,TrainingPipelineConfig,DataValidationConfig)
-from finance_complaint.entity.artifact_entity import (DataIngestionArtifact,DataValidationArtifact)
+from finance_complaint.entity.config_entity import (DataIngestionConfig,TrainingPipelineConfig,DataValidationConfig,DataTransformationConfig)
+from finance_complaint.entity.artifact_entity import (DataIngestionArtifact,DataValidationArtifact,DataTransformationArtifact)
 from finance_complaint.component.data_ingestion import DataIngestion
 from finance_complaint.component.data_validation import DataValidation  
+from finance_complaint.component.data_transformation import DataTransformation 
 import os,sys
 
 
@@ -33,11 +34,24 @@ class TrainingPipeline:
         except Exception as e:
             raise FinanceException(e, sys)
 
+    def start_data_transformation(self, data_validation_artifact: DataValidationArtifact) -> DataTransformationArtifact:
+        try:
+            data_transformation_config = DataTransformationConfig(training_pipeline_config=self.training_pipeline_config)
+            data_transformation = DataTransformation(data_validation_artifact=data_validation_artifact,
+                                                     data_transformation_config=data_transformation_config
+
+                                                     )
+            data_transformation_artifact = data_transformation.initiate_data_transformation()
+            return data_transformation_artifact
+        except Exception as e:
+            raise FinanceException(e, sys)
+
     
     def start(self):
         try:
             data_ingestion_artifact = self.start_data_ingestion()  
             data_validation_artifact = self.start_data_validation(data_ingestion_artifact=data_ingestion_artifact)
+            data_transformation_artifact = self.start_data_transformation(data_validation_artifact=data_validation_artifact)
             
         except Exception as e:
             raise FinanceException(e, sys)

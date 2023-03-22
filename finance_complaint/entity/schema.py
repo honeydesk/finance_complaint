@@ -64,15 +64,17 @@ class FinanceDataSchema:
         ]
         return features
 
+    # 'im' means imutable
     @property
     def im_one_hot_encoding_features(self) -> List[str]:
         return [f"im_{col}" for col in self.one_hot_encoding_features]
 
-
+    # 'si' means 'string indexed' 
     @property
     def string_indexer_one_hot_features(self) -> List[str]:
         return [f"si_{col}" for col in self.one_hot_encoding_features]
 
+    # 'tf' means transformed.
     @property
     def tf_one_hot_encoding_features(self) -> List[str]:
         return [f"tf_{col}" for col in self.one_hot_encoding_features]
@@ -94,7 +96,7 @@ class FinanceDataSchema:
     @property
     def numerical_columns(self) -> List[str]:
         return self.derived_output_features
-
+    
     @property
     def im_numerical_columns(self) -> List[str]:
         return [f"im_{col}" for col in self.numerical_columns]
