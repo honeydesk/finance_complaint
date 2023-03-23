@@ -1,12 +1,15 @@
 from finance_complaint.exception import FinanceException
 from finance_complaint.logger import logging as  logger
-from finance_complaint.entity.config_entity import (DataIngestionConfig,TrainingPipelineConfig,DataValidationConfig,DataTransformationConfig,ModelTrainerConfig,ModelEvaluationConfig)
-from finance_complaint.entity.artifact_entity import (DataIngestionArtifact,DataValidationArtifact,DataTransformationArtifact,ModelTrainerArtifact,ModelEvaluationArtifact)
+from finance_complaint.entity.config_entity import (DataIngestionConfig,TrainingPipelineConfig,DataValidationConfig,
+     DataTransformationConfig,ModelTrainerConfig,ModelEvaluationConfig,ModelPusherConfig)
+from finance_complaint.entity.artifact_entity import (DataIngestionArtifact,DataValidationArtifact,
+     DataTransformationArtifact,ModelTrainerArtifact,ModelEvaluationArtifact,ModelPusherArtifact)
 from finance_complaint.component.data_ingestion import DataIngestion
 from finance_complaint.component.data_validation import DataValidation  
 from finance_complaint.component.data_transformation import DataTransformation 
 from finance_complaint.component.model_trainer import ModelTrainer  
 from finance_complaint.component.model_evaluation import ModelEvaluation
+from finance_complaint.component.model_pusher import ModelPusher
 import os,sys
 
 
@@ -70,6 +73,17 @@ class TrainingPipeline:
         except Exception as e:
             raise FinanceException(e, sys)
 
+    def start_model_pusher(self, model_trainer_artifact: ModelTrainerArtifact):
+        try:
+
+            model_pusher_config = ModelPusherConfig(training_pipeline_config=self.training_pipeline_config)
+            model_pusher = ModelPusher(model_trainer_artifact=model_trainer_artifact,
+                                       model_pusher_config=model_pusher_config
+                                       )
+            return model_pusher.initiate_model_pusher()
+        except Exception as e:
+            raise FinanceException(e, sys)
+
     
     def start(self):
         try:
@@ -82,7 +96,8 @@ class TrainingPipeline:
                                                               )
 
             if model_eval_artifact.model_accepted:
-                pass
+                self.start_model_pusher(model_trainer_artifact=model_trainer_artifact)
             
         except Exception as e:
             raise FinanceException(e, sys)
+        
