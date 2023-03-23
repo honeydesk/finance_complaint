@@ -137,3 +137,4 @@ artifact
 artifact/
 logs/
 saved_models/
+data/
