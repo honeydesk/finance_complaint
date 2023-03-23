@@ -1,6 +1,7 @@
 import yaml
 from .exception import FinanceException
 import os, sys
+import shutil
 from pyspark.ml.evaluation import MulticlassClassificationEvaluator
 from pyspark.sql import DataFrame
 from finance_complaint.logger import logging as logger
@@ -42,3 +43,12 @@ def get_score(dataframe: DataFrame, metric_name, label_col, prediction_col) -> f
         return score
     except Exception as e:
         raise FinanceException(e, sys)
+
+
+def clean_dir(dir: str):
+    for files in os.listdir(dir):
+        path = os.path.join(dir, files)
+        try:
+            shutil.rmtree(path)
+        except Exception as e:
+            raise FinanceException(e, sys)

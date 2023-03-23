@@ -6,6 +6,8 @@ import os,sys
 from finance_complaint.entity.config_entity import BatchPredictionConfig
 from finance_complaint.constant import TIMESTAMP
 from pyspark.sql import DataFrame
+from finance_complaint.utils import clean_dir
+
 class BatchPrediction:
 
     def __init__(self,batch_config:BatchPredictionConfig):
@@ -33,5 +35,7 @@ class BatchPrediction:
 
                 archive_file_path = os.path.join(self.batch_config.archive_dir,f"{file_name}_{TIMESTAMP}")
                 df.write.parquet(archive_file_path)
+
+            clean_dir(self.batch_config.inbox_dir)
         except Exception as e:
             raise FinanceException(e, sys)
