@@ -22,6 +22,9 @@ DATA_VALIDATION_DIR = "data_validation"
 DATA_VALIDATION_FILE_NAME = "finance_complaint"
 DATA_VALIDATION_ACCEPTED_DATA_DIR = "accepted_data"
 DATA_VALIDATION_REJECTED_DATA_DIR = "rejected_data"
+DATA_VALIDATION_DRIFT_DIR = "dirft_dir"
+REFERENCE_DATA_DIR = "ref_data"
+REFERENCE_DATA_FILE_NAME = "ref_data.parquet"
 
 
 DATA_TRANSFORMATION_DIR = "data_transformation"
@@ -109,6 +112,8 @@ class DataValidationConfig:
             self.accepted_data_dir = os.path.join(data_validation_dir, DATA_VALIDATION_ACCEPTED_DATA_DIR)
             self.rejected_data_dir = os.path.join(data_validation_dir, DATA_VALIDATION_REJECTED_DATA_DIR)
             self.file_name=DATA_VALIDATION_FILE_NAME
+            self.ref_data_dir = os.path.join(os.path.dirname(training_pipeline_config.artifact_dir), REFERENCE_DATA_DIR)
+            self.data_drift_dir = os.path.join(data_validation_dir,DATA_VALIDATION_DRIFT_DIR)
         except Exception as e:
             raise CustomException(e,sys)
 

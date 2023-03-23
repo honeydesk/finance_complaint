@@ -14,7 +14,7 @@ class DataIngestionArtifact:
 class DataValidationArtifact:
     accepted_file_path:str
     rejected_dir: str
-
+    data_drift_dir:str
 
 @dataclass
 class DataTransformationArtifact:

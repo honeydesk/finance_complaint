@@ -6,15 +6,20 @@ from typing import List, Dict
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import col
 
+from pyspark.sql.types import StringType
+
 from finance_complaint.config.spark_manager import spark_session
 from finance_complaint.entity.artifact_entity import DataIngestionArtifact
-from finance_complaint.entity.config_entity import DataValidationConfig
+from finance_complaint.entity.config_entity import DataValidationConfig, REFERENCE_DATA_FILE_NAME
 from finance_complaint.entity.schema import FinanceDataSchema
 from finance_complaint.exception import FinanceException
 from finance_complaint.logger import logging as  logger
 
 from pyspark.sql.functions import lit
 from finance_complaint.entity.artifact_entity import DataValidationArtifact
+
+from evidently.report import Report
+from evidently.metric_preset import DataDriftPreset, DataQualityPreset
 
 ERROR_MESSAGE = "error_msg"
 MissingReport = namedtuple("MissingReport", ["total_row", "missing_row", "missing_percentage"])
@@ -117,6 +122,35 @@ class DataValidation():
         except Exception as e:
             raise FinanceException(e, sys)
 
+    def detect_data_drift(self,cur_dir):
+        try:
+            os.makedirs(self.data_validation_config.data_drift_dir,exist_ok=True)
+            current_data = spark_session.read.parquet(cur_dir)
+            current_df = current_data.sample(fraction=0.1, seed=42).toPandas()
+            os.makedirs(self.data_validation_config.ref_data_dir,exist_ok=True)
+            ref_data_path = os.path.join(self.data_validation_config.ref_data_dir,REFERENCE_DATA_FILE_NAME)
+            if os.path.exists(ref_data_path):
+                logger.info(f"{ref_data_path} exists")
+                ref_data = spark_session.read.parquet(cur_dir)
+                ref_df = ref_data.sample(fraction=0.1, seed=42).toPandas()
+                report = Report(metrics=[ 
+                    DataQualityPreset(),
+                    DataDriftPreset()     
+                ])
+                report.run(reference_data=ref_df, current_data=current_df)
+                report.save_html(os.path.join(self.data_validation_config.data_drift_dir, "drift_report.html"))
+
+            else:
+                logger.info(f"{ref_data_path} does not exists")
+                report = Report(metrics=[ 
+                                DataQualityPreset()
+                            ])
+                report.run(reference_data=None, current_data=current_df)
+                report.save_html(os.path.join(self.data_validation_config.data_drift_dir, "data_quality.html"))
+
+        except Exception as e:
+            raise FinanceException(e, sys)
+
     def initiate_data_validation(self) -> DataValidationArtifact:
         try:
             logger.info(f"Initiating data preprocessing.")
@@ -139,8 +173,11 @@ class DataValidation():
                                               )
             dataframe.write.parquet(accepted_file_path)
 
+            self.detect_data_drift(cur_dir=accepted_file_path)
+
             artifact = DataValidationArtifact(accepted_file_path=accepted_file_path,
-                                              rejected_dir=self.data_validation_config.rejected_data_dir
+                                              rejected_dir=self.data_validation_config.rejected_data_dir,
+                                              data_drift_dir=self.data_validation_config.ref_data_dir
                                               )
             logger.info(f"Data validation artifact: [{artifact}]")
             return artifact
